@@ -48,7 +48,7 @@ class MainActivity : ComponentActivity() {
         //创建FlutterEnging
         val flutterEngine = FlutterEngine(this)
         //指定要跳转的 Flutter 页面
-        flutterEngine.navigationChannel.setInitialRoute("main")
+        flutterEngine.navigationChannel.setInitialRoute("main?{\"name\":\"erdai\",\"age\":18}")
         flutterEngine.dartExecutor.executeDartEntrypoint(
             DartExecutor.DartEntrypoint.createDefault()
         )
