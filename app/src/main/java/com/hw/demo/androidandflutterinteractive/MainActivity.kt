@@ -1,11 +1,17 @@
 package com.hw.demo.androidandflutterinteractive
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
@@ -16,20 +22,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
-import com.hw.demo.androidandflutterinteractive.MainActivity.Companion.FLUTTER_ENGINE_ID
+import androidx.compose.ui.unit.dp
+import com.hw.demo.androidandflutterinteractive.FlutterEngineManager.Companion.FLUTTER_ENGINE_ID
 import com.hw.demo.androidandflutterinteractive.ui.theme.AndroidAndFlutterInteractiveTheme
 import io.flutter.embedding.android.FlutterActivity
-import io.flutter.embedding.engine.FlutterEngine
-import io.flutter.embedding.engine.FlutterEngineCache
-import io.flutter.embedding.engine.dart.DartExecutor
 
 class MainActivity : ComponentActivity() {
 
-    private lateinit var flutterEngine: FlutterEngine
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        flutterEngine = initFlutterEnding(FLUTTER_ENGINE_ID)
+        checkFlutterEngine(this)
 
         setContent {
             AndroidAndFlutterInteractiveTheme {
@@ -44,19 +47,19 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    private fun initFlutterEnding(flutterEngineId: String): FlutterEngine {
-        //创建FlutterEnging
-        val flutterEngine = FlutterEngine(this)
-        //指定要跳转的 Flutter 页面
-        flutterEngine.navigationChannel.setInitialRoute("main?{\"name\":\"erdai\",\"age\":18}")
-        flutterEngine.dartExecutor.executeDartEntrypoint(
-            DartExecutor.DartEntrypoint.createDefault()
-        )
-        //缓存FlutterEndine
-        val flutterEngineCache = FlutterEngineCache.getInstance()
-        flutterEngineCache.put(flutterEngineId, flutterEngine)
-        return flutterEngine
-    }
+//    private fun initFlutterEnding(flutterEngineId: String): FlutterEngine {
+//        //创建FlutterEnging
+//        val flutterEngine = FlutterEngine(this)
+//        //指定要跳转的 Flutter 页面
+//        flutterEngine.navigationChannel.setInitialRoute()
+//        flutterEngine.dartExecutor.executeDartEntrypoint(
+//            DartExecutor.DartEntrypoint.createDefault()
+//        )
+//        //缓存FlutterEndine
+//        val flutterEngineCache = FlutterEngineCache.getInstance()
+//        flutterEngineCache.put(flutterEngineId, flutterEngine)
+//        return flutterEngine
+//    }
 
     override fun onDestroy() {
         super.onDestroy()
@@ -66,13 +69,12 @@ class MainActivity : ComponentActivity() {
          * 当我们退出 FlutterActivity 时，FlutterEngine 可能还会继续执行代码
          * 所以我们应该在 FlutterActivity 退出时调用 flutterEngine.destroy 停止执行并释放资源
          */
-        flutterEngine.destroy()
+        FlutterEngineManager.instance.releaseFlutterEngine(FLUTTER_ENGINE_ID)
     }
 
     companion object {
         private const val TAG = "MainActivity"
 
-        const val FLUTTER_ENGINE_ID = "default"
     }
 }
 
@@ -88,16 +90,39 @@ fun Greeting(name: String, modifier: Modifier = Modifier, context: Context) {
             .fillMaxSize()
             .wrapContentSize(Alignment.Center)
     ) {
-        Button(onClick = {
-            toFlutterActivity(context)
-        }) {
-            Text(text = "Jump to Flutter!")
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .wrapContentHeight()
+                .padding(vertical = 8.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Button(onClick = {
+                toFlutterActivity(context)
+            }) {
+                Text(text = "Jump to Flutter!")
+            }
+            Button(onClick = {
+                toSecondActivity(context)
+            }) {
+                Text(text = "Jump to Second Activity")
+            }
         }
     }
 }
 
+private fun checkFlutterEngine(context: Context) {
+    FlutterEngineManager.instance.getFlutterEngine(context, FLUTTER_ENGINE_ID, "main?{\"name\":\"erdai\",\"age\":18}")
+}
+
+fun toSecondActivity(context: Context) {
+    context.startActivity(Intent(context, SecondActivity::class.java))
+}
+
 fun toFlutterActivity(context: Context) {
 //    val intent = FlutterActivity.createDefaultIntent(context)
+    checkFlutterEngine(context)
     val intent = FlutterActivity.withCachedEngine(FLUTTER_ENGINE_ID).build(context)
     context.startActivity(intent)
 }

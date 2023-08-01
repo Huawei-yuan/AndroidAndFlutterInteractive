@@ -29,7 +29,10 @@
             android:name="io.flutter.embedding.android.FlutterActivity"
             android:configChanges="orientation|keyboardHidden|screenSize"
             android:hardwareAccelerated="true"
-            android:windowSoftInputMode="adjustResize" />
+            android:windowSoftInputMode="adjustResize"/>
+
+        <activity android:name="com.hw.demo.androidandflutterinteractive.SecondActivity"
+            android:theme="@style/Theme.AppCompat.NoActionBar"/>
 
     </application>
 
