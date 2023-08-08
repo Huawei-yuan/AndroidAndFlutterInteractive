@@ -9,6 +9,7 @@ import com.hw.demo.androidandflutterinteractive.FlutterEngineManager.Companion.F
 import com.hw.demo.androidandflutterinteractive.databinding.ActivitySecondBinding
 import io.flutter.embedding.android.FlutterFragment
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
 import java.util.Timer
 import kotlin.concurrent.timerTask
@@ -21,9 +22,17 @@ class SecondActivity : AppCompatActivity() {
 
     private lateinit var methodChannel: MethodChannel
 
+    private lateinit var eventChannel: EventChannel
+
+    private var eventSink: EventChannel.EventSink? = null
+
     private var count = 0
 
     private var timer: Timer? = null
+
+    private var eventTimer: Timer? = null
+
+    private var electricity = 0
 
     private val binding: ActivitySecondBinding by lazy {
         ActivitySecondBinding.inflate(LayoutInflater.from(this))
@@ -35,20 +44,35 @@ class SecondActivity : AppCompatActivity() {
         flutterEngine =
             FlutterEngineManager.instance.getFlutterEngine(this, FLUTTER_ENGINE_ID, "main?{\"name\":\"secondErdai\",\"age\":28}")
 
-        methodChannel = MethodChannel(flutterEngine.dartExecutor, "com.hw.demo.androidandflutterinteractive")
-        methodChannel.setMethodCallHandler { call, result ->
-            Log.i(TAG, "MethodCallHandler method = ${call.method}" +
-                    ", arguments = ${call.arguments}" +
-                    ", result = $result")
-            if ("sendFinish" == call.method) {
-                finish()
+//        methodChannel = MethodChannel(flutterEngine.dartExecutor, "com.hw.demo.androidandflutterinteractive")
+//        methodChannel.setMethodCallHandler { call, result ->
+//            Log.i(TAG, "MethodCallHandler method = ${call.method}" +
+//                    ", arguments = ${call.arguments}" +
+//                    ", result = $result")
+//            if ("sendFinish" == call.method) {
+//                finish()
+//            }
+//        }
+
+        eventChannel = EventChannel(flutterEngine.dartExecutor, "com.hw.demo.androidandflutterinteractive.eventchannel")
+        eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
+            override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+                Log.i(TAG, "eventChannel onListen arguments = $arguments")
+                eventSink = events
+
+                startEventTimer()
             }
-        }
+
+            override fun onCancel(arguments: Any?) {
+                Log.i(TAG, "eventChannel onCancel arguments = $arguments")
+            }
+
+        })
         flutterFragment = FlutterFragment.withCachedEngine(FLUTTER_ENGINE_ID).build()
 
         supportFragmentManager.beginTransaction().replace(binding.fragmentContainerFl.id, flutterFragment).commit()
 
-        startTimer()
+//        startTimer()
     }
 
     private fun startTimer() {
@@ -67,6 +91,27 @@ class SecondActivity : AppCompatActivity() {
     private fun stopTimer() {
         Log.i(TAG, "stopTimer")
         timer?.cancel()
+    }
+
+    private fun startEventTimer() {
+        Log.i(TAG, "startEventTimer")
+        eventTimer?.cancel()
+        eventTimer = Timer()
+        eventTimer?.schedule(timerTask {
+            runOnUiThread {
+                electricity += 20
+                Log.i(TAG, "eventTimer electricity = $electricity")
+                eventSink?.success("电量：$electricity %")
+                if (electricity >= 1000) {
+                    eventSink?.endOfStream()
+                }
+            }
+        }, 0,1000)
+    }
+
+    private fun stopEventTimer() {
+        Log.i(TAG, "stopEventTimer")
+        eventTimer?.cancel()
     }
 
     override fun onPostResume() {
@@ -103,6 +148,7 @@ class SecondActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         stopTimer()
+        stopEventTimer()
         flutterFragment.onDestroy()
         FlutterEngineManager.instance.releaseFlutterEngine(FLUTTER_ENGINE_ID)
     }
