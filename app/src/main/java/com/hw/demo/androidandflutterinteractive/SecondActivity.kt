@@ -4,13 +4,16 @@ import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.hw.demo.androidandflutterinteractive.FlutterEngineManager.Companion.FLUTTER_ENGINE_ID
 import com.hw.demo.androidandflutterinteractive.databinding.ActivitySecondBinding
 import io.flutter.embedding.android.FlutterFragment
 import io.flutter.embedding.engine.FlutterEngine
+import io.flutter.plugin.common.BasicMessageChannel
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodChannel
+import io.flutter.plugin.common.StringCodec
 import java.util.Timer
 import kotlin.concurrent.timerTask
 
@@ -25,6 +28,8 @@ class SecondActivity : AppCompatActivity() {
     private lateinit var eventChannel: EventChannel
 
     private var eventSink: EventChannel.EventSink? = null
+
+    private lateinit var messageChannel: BasicMessageChannel<String>
 
     private var count = 0
 
@@ -54,20 +59,33 @@ class SecondActivity : AppCompatActivity() {
 //            }
 //        }
 
-        eventChannel = EventChannel(flutterEngine.dartExecutor, "com.hw.demo.androidandflutterinteractive.eventchannel")
-        eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
-            override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
-                Log.i(TAG, "eventChannel onListen arguments = $arguments")
-                eventSink = events
+//        eventChannel = EventChannel(flutterEngine.dartExecutor, "com.hw.demo.androidandflutterinteractive.eventchannel")
+//        eventChannel.setStreamHandler(object : EventChannel.StreamHandler {
+//            override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
+//                Log.i(TAG, "eventChannel onListen arguments = $arguments")
+//                eventSink = events
+//
+//                startEventTimer()
+//            }
+//
+//            override fun onCancel(arguments: Any?) {
+//                Log.i(TAG, "eventChannel onCancel arguments = $arguments")
+//            }
+//
+//        })
 
-                startEventTimer()
-            }
+        messageChannel = BasicMessageChannel(flutterEngine.dartExecutor, "com.hw.demo.androidandflutterinteractive.messagechannel", StringCodec.INSTANCE)
+        messageChannel.setMessageHandler { message, reply ->
+            Log.i(TAG, "messageChannel in MessageHandler message = $message")
+            Toast.makeText(this, message?:"null",Toast.LENGTH_SHORT).show()
+            reply.reply("梧桐山")
+        }
 
-            override fun onCancel(arguments: Any?) {
-                Log.i(TAG, "eventChannel onCancel arguments = $arguments")
-            }
+        messageChannel.send("周末去爬山吗？") { reply ->
+            Log.i(TAG, "messageChannel onSend message = $reply")
+            Toast.makeText(this,reply?:"null",Toast.LENGTH_SHORT).show()
+        }
 
-        })
         flutterFragment = FlutterFragment.withCachedEngine(FLUTTER_ENGINE_ID).build()
 
         supportFragmentManager.beginTransaction().replace(binding.fragmentContainerFl.id, flutterFragment).commit()
