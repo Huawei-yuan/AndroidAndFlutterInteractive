@@ -113,7 +113,7 @@ fun Greeting(name: String, modifier: Modifier = Modifier, context: Context) {
 }
 
 private fun checkFlutterEngine(context: Context) {
-    FlutterEngineManager.instance.getFlutterEngine(context, FLUTTER_ENGINE_ID, "main?{\"name\":\"erdai\",\"age\":18}")
+    FlutterEngineManager.instance.getFlutterEngine(context, FLUTTER_ENGINE_ID, "secondPage?{\"name\":\"erdai\",\"age\":18}")
 }
 
 fun toSecondActivity(context: Context) {

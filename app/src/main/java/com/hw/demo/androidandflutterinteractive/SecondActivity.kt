@@ -47,7 +47,7 @@ class SecondActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         flutterEngine =
-            FlutterEngineManager.instance.getFlutterEngine(this, FLUTTER_ENGINE_ID, "main?{\"name\":\"secondErdai\",\"age\":28}")
+            FlutterEngineManager.instance.getFlutterEngine(this, FLUTTER_ENGINE_ID, "/secondPage?{\"name\":\"secondErdai\",\"age\":28}")
 
 //        methodChannel = MethodChannel(flutterEngine.dartExecutor, "com.hw.demo.androidandflutterinteractive")
 //        methodChannel.setMethodCallHandler { call, result ->
